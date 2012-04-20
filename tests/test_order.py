@@ -66,7 +66,7 @@ class TestOrder(unittest.TestCase):
             order_subtype='single',
         )
 
-        self.assertEqual(order.data, {
+        expected_data = {
             'm_order_id': 1,
             'price_type': 'limit',
             'time_in_force': 'good_till_cancel',
@@ -79,26 +79,20 @@ class TestOrder(unittest.TestCase):
             'allOrNone': False,
             'order_subtype': 'single',
             'order_type': 'regular'
-        })
+        }
+        self.assertEqual(order.data, expected_data)
 
-        self.assertEqual(order.toDict(), {
-            'm_order_id': 1,
-            'price_type': 'limit',
-            'time_in_force': 'good_till_cancel',
-            'price': '72.50',
-            'underlying_stock_symbol': 'COP',
-            'source': 'API',
-            'client_id': 'someuniqueidentifier',
-            'preferred_destination': 'BEST',
-            'legs': [
-                { 'index': 0, 'phony': 'leg' },
-                { 'index': 1, 'phony': 'leg' },
-                { 'index': 2, 'phony': 'leg' },
-            ],
-            'allOrNone': False,
-            'order_subtype': 'single',
-            'order_type': 'regular'
-        })
+        expected_data['legs'] = [
+            { 'index': 0, 'phony': 'leg' },
+            { 'index': 1, 'phony': 'leg' },
+            { 'index': 2, 'phony': 'leg' },
+        ]
+        self.assertEqual(order.toDict(), expected_data)
+
+        order.modify(1337)
+        expected_data['modify_order'] = True
+        expected_data['order_id'] = 1337
+        self.assertEqual(order.toDict(), expected_data)
 
 
 if __name__ == '__main__':

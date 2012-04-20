@@ -124,3 +124,56 @@ class AccountMarginJsonRequest(OhRequest):
             'order': order.toDict(),
         }
 
+class OrderCreateJsonRequest(OhRequest):
+    def __init__(self, authToken, account, order):
+        self.endpoint = 'https://api.optionshouse.com/j'
+        self.action = 'order.create.json'
+        self.data = {
+            'authToken': authToken,
+            'account': account,
+            'order': order.toDict(),
+        }
+
+class OrderModifyJsonRequest(OhRequest):
+    def __init__(self, authToken, account, order):
+        self.endpoint = 'https://api.optionshouse.com/j'
+        self.action = 'order.modify.json'
+        self.data = {
+            'authToken': authToken,
+            'account': account,
+            'order': order.toDict(),
+        }
+
+class OrderCancelJsonRequest(OhRequest):
+    def __init__(self, authToken, account, order_id):
+        self.endpoint = 'https://api.optionshouse.com/j'
+        self.action = 'order.cancel.json'
+        self.data = {
+            'authToken': authToken,
+            'account': account,
+            'order_id': order_id,
+        }
+
+class MasterAccountOrdersRequest(OhRequest):
+    def __init__(self, authToken, account, **flags):
+        self.endpoint = 'https://api.optionshouse.com/j'
+        self.action = 'master.account.orders'
+        self.data = {
+            'authToken': authToken,
+            'account': account,
+            'master_order': {
+                'master_order_view': 'current',
+            }
+        }
+
+        if 'symbol' in flags:
+            self.data['symbol'] = flags['symbol']
+        if 'archived' in flags and flags['archived']:
+            self.data['master_order']['master_order_view'] = 'archived'
+        if 'page' in flags:
+            self.data['master_order']['page'] = flags['page']
+        if 'page_count' in flags:
+            self.data['master_order']['page_count'] = flags['page_count']
+        if 'page_size' in flags:
+            self.data['master_order']['page_size'] = flags['page_size']
+

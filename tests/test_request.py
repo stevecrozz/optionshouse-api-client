@@ -221,6 +221,102 @@ class TestAccountMarginJsonRequest(unittest.TestCase):
         self.assertEqual(req.action, 'account.margin.json')
         self.assertEqual(req.data, expected_data)
 
+class TestOrderCreateJsonRequest(unittest.TestCase):
+    def test_proper_order_create_request(self):
+        class FakeOrder:
+            def toDict(self):
+                return { 'order': 'withthefakeness!!' }
+
+        authToken = '83982734331_someauthtoken'
+        account = '32404_someaccount'
+        order = FakeOrder()
+        expected_data = {
+            'authToken': authToken,
+            'account': account,
+            'order': order.toDict(),
+        }
+
+        req = OrderCreateJsonRequest(authToken, account, order)
+        self.assertEqual(req.endpoint, 'https://api.optionshouse.com/j')
+        self.assertEqual(req.action, 'order.create.json')
+        self.assertEqual(req.data, expected_data)
+
+class TestOrderModifyJsonRequest(unittest.TestCase):
+    def test_proper_order_modify_request(self):
+        class FakeOrder:
+            def toDict(self):
+                return { 'order': 'fakecancelorder' }
+
+        authToken = '83982734331_someauthtoken'
+        account = '32404_someaccount'
+        order = FakeOrder()
+        expected_data = {
+            'authToken': authToken,
+            'account': account,
+            'order': order.toDict(),
+        }
+
+        req = OrderModifyJsonRequest(authToken, account, order)
+        self.assertEqual(req.endpoint, 'https://api.optionshouse.com/j')
+        self.assertEqual(req.action, 'order.modify.json')
+        self.assertEqual(req.data, expected_data)
+
+class TestOrderCancelJsonRequest(unittest.TestCase):
+    def test_proper_order_cancel_request(self):
+        authToken = '83982734331_someauthtoken'
+        account = '32404_someaccount'
+        expected_data = {
+            'authToken': authToken,
+            'account': account,
+            'order_id': 888222,
+        }
+
+        req = OrderCancelJsonRequest(authToken, account, 888222)
+        self.assertEqual(req.endpoint, 'https://api.optionshouse.com/j')
+        self.assertEqual(req.action, 'order.cancel.json')
+        self.assertEqual(req.data, expected_data)
+
+class TestMasterAccountOrdersRequest(unittest.TestCase):
+    def test_proper_request(self):
+        authToken = '83982734331_someauthtoken'
+        account = '32404_someaccount'
+
+        possible_flags = [
+            { },
+            { 'archived': True, 'page': 9 },
+            { 'symbol': 'SSO' },
+            { 'page': 2 },
+            { 'page_count': 5 },
+            { 'page': 3, 'page_count': 20, 'page_size': 100 },
+            { 'garbage': True, 'symbol': 'CSCO' },
+        ]
+
+        for flags in possible_flags:
+            req = MasterAccountOrdersRequest(authToken, account, **flags)
+
+            expected = {
+                'authToken': authToken,
+                'account': account,
+                'master_order': {
+                    'master_order_view': 'current',
+                },
+            }
+
+            if 'symbol' in flags:
+                expected['symbol'] = flags['symbol']
+            if 'page' in flags:
+                expected['master_order']['page'] = flags['page']
+            if 'page_count' in flags:
+                expected['master_order']['page_count'] = flags['page_count']
+            if 'page_size' in flags:
+                expected['master_order']['page_size'] = flags['page_size']
+            if 'archived' in flags and flags['archived'] == True:
+                expected['master_order']['master_order_view'] = 'archived'
+
+            self.assertEqual(req.endpoint, 'https://api.optionshouse.com/j')
+            self.assertEqual(req.action, 'master.account.orders')
+            self.assertEqual(req.data, expected)
+
 
 if __name__ == '__main__':
     unittest.main()

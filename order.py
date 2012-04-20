@@ -21,6 +21,10 @@ class Order(object):
 
         self.data = order
 
+    def modify(self, order_id):
+        self.data['modify_order'] = True
+        self.data['order_id'] = order_id
+
     def toJson(self):
         return json.dumps(self.toDict())
 
@@ -31,7 +35,7 @@ class Order(object):
             leg['index'] = len(dict_legs)
             dict_legs.append(leg)
 
-        order = self.data
+        order = self.data.copy()
         order['legs'] = dict_legs
 
         return order
