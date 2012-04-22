@@ -317,6 +317,62 @@ class TestMasterAccountOrdersRequest(unittest.TestCase):
             self.assertEqual(req.action, 'master.account.orders')
             self.assertEqual(req.data, expected)
 
+class TestAccountPositionsRequest(unittest.TestCase):
+    def test_account_positions_request(self):
+        authToken = '83982734331_someauthtoken'
+        account = '32404_someaccount'
+        expected_data = {
+            'authToken': authToken,
+            'account': account,
+        }
+
+        req = AccountPositionsRequest(authToken, account)
+        self.assertEqual(req.endpoint, 'https://api.optionshouse.com/m')
+        self.assertEqual(req.action, 'account.positions')
+        self.assertEqual(req.data, expected_data)
+
+class TestAccountActivityRequest(unittest.TestCase):
+    def test_account_activity_request(self):
+        authToken = '83982734331_someauthtoken'
+        account = '32404_someaccount'
+        possible_flags = [
+            { },
+            { 'maxPage': 15, 'page': 9 },
+            { 'size': 20 },
+            { 'page': 2 },
+            { 'totalCount': 5 },
+            { 'page': 3, 'totalCount': 20, 'sDate': '01/01/2012' },
+            { 'sDate': '03/01/2012', 'eDate': '03/31/2012' },
+            { 'symbol': 'GS' },
+            { 'garbage': True, 'size': 20 },
+        ]
+
+        for flags in possible_flags:
+            expected_data = {
+                'authToken': authToken,
+                'account': account,
+            }
+
+            if 'page' in flags:
+                expected_data['page'] = flags['page']
+            if 'maxPage' in flags:
+                expected_data['maxPage'] = flags['maxPage']
+            if 'size' in flags:
+                expected_data['size'] = flags['size']
+            if 'totalCount' in flags:
+                expected_data['totalCount'] = flags['totalCount']
+            if 'sDate' in flags:
+                expected_data['sDate'] = flags['sDate']
+            if 'eDate' in flags:
+                expected_data['eDate'] = flags['eDate']
+            if 'symbol' in flags:
+                expected_data['symbol'] = flags['symbol']
+
+            req = AccountActivityRequest(authToken, account, **flags)
+            self.assertEqual(req.endpoint, 'https://api.optionshouse.com/m')
+            self.assertEqual(req.action, 'account.activity')
+            self.assertEqual(req.data, expected_data)
+
 
 if __name__ == '__main__':
     unittest.main()

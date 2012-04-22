@@ -177,3 +177,37 @@ class MasterAccountOrdersRequest(OhRequest):
         if 'page_size' in flags:
             self.data['master_order']['page_size'] = flags['page_size']
 
+class AccountPositionsRequest(OhRequest):
+    def __init__(self, authToken, account):
+        self.endpoint = 'https://api.optionshouse.com/m'
+        self.action = 'account.positions'
+        self.data = {
+            'authToken': authToken,
+            'account': account,
+        }
+
+class AccountActivityRequest(OhRequest):
+    def __init__(self, authToken, account, **kwargs):
+        self.endpoint = 'https://api.optionshouse.com/m'
+        self.action = 'account.activity'
+        self.data = {
+            'authToken': authToken,
+            'account': account,
+        }
+        print kwargs
+
+        if 'page' in kwargs:
+            self.data['page'] = kwargs['page']
+        if 'maxPage' in kwargs:
+            self.data['maxPage'] = kwargs['maxPage']
+        if 'size' in kwargs:
+            self.data['size'] = kwargs['size']
+        if 'totalCount' in kwargs:
+            self.data['totalCount'] = kwargs['totalCount']
+        if 'sDate' in kwargs:
+            self.data['sDate'] = kwargs['sDate']
+        if 'eDate' in kwargs:
+            self.data['eDate'] = kwargs['eDate']
+        if 'symbol' in kwargs:
+            self.data['symbol'] = kwargs['symbol']
+
