@@ -4,6 +4,11 @@ import json
 class OhRequest(object):
     HEADERS = { 'User-Agent' : 'OhPythonClient' }
 
+    def __init__(self):
+        self.endpoint = self.ENDPOINT
+        self.action = self.ACTION
+        self.data = {}
+
     def body(self):
         return 'r=' + json.dumps({
             'EZMessage': {
@@ -19,39 +24,61 @@ class OhRequest(object):
             OhRequest.HEADERS
         )
 
+    @classmethod
+    def requires_auth_token(self, fn):
+        def wrapper(self, *args, **kwargs):
+            args = list(args)
+            authToken = args.pop(0)
+            fn(self, *args, **kwargs)
+            self.data['authToken'] = authToken
+            self.requires_auth_token = True
+
+        return wrapper
+
+    @classmethod
+    def requires_account(self, fn):
+        def wrapper(self, *args, **kwargs):
+            args = list(args)
+            authToken = args.pop(0)
+            fn(self, *args, **kwargs)
+            self.data['account'] = authToken
+            self.requires_account = True
+
+        return wrapper
+
 class LoginRequest(OhRequest):
+    ENDPOINT = 'https://api.optionshouse.com/m'
+    ACTION = 'auth.login'
+
     def __init__(self, username, password):
-        self.endpoint = 'https://api.optionshouse.com/m'
-        self.action = 'auth.login'
-        self.data = {
-            'userName': username,
-            'password': password,
-        }
+        super(LoginRequest, self).__init__()
+        self.data['userName'] = username
+        self.data['password'] = password
 
 class LogoutRequest(OhRequest):
-    def __init__(self, authToken):
-        self.endpoint = 'https://api.optionshouse.com/m'
-        self.action = 'auth.logout'
-        self.data = {
-            'authToken': authToken,
-        }
+    ENDPOINT = 'https://api.optionshouse.com/m'
+    ACTION = 'auth.logout'
+
+    @OhRequest.requires_auth_token
+    def __init__(self):
+        super(LogoutRequest, self).__init__()
 
 class AccountInfoRequest(OhRequest):
-    def __init__(self, authToken):
-        self.endpoint = 'https://api.optionshouse.com/m'
-        self.action = 'account.info'
-        self.data = {
-            'authToken': authToken,
-        }
+    ENDPOINT = 'https://api.optionshouse.com/m'
+    ACTION = 'account.info'
+
+    @OhRequest.requires_auth_token
+    def __init__(self):
+        super(AccountInfoRequest, self).__init__()
 
 class AccountCashRequest(OhRequest):
-    def __init__(self, authToken, account, **flags):
-        self.endpoint = 'https://api.optionshouse.com/m'
-        self.action = 'account.cash'
-        self.data = {
-            'authToken': authToken,
-            'account': account,
-        }
+    ENDPOINT = 'https://api.optionshouse.com/m'
+    ACTION = 'account.cash'
+
+    @OhRequest.requires_auth_token
+    @OhRequest.requires_account
+    def __init__(self, **flags):
+        super(AccountCashRequest, self).__init__()
 
         if 'portfolio' in flags and flags['portfolio']:
             self.data['portfolio'] = True
@@ -62,21 +89,21 @@ class AccountCashRequest(OhRequest):
 
 
 class KeepAliveRequest(OhRequest):
-    def __init__(self, authToken, account):
-        self.endpoint = 'https://api.optionshouse.com/m'
-        self.action = 'auth.keepAlive'
-        self.data = {
-            'authToken': authToken,
-            'account': account,
-        }
+    ENDPOINT = 'https://api.optionshouse.com/m'
+    ACTION = 'auth.keepAlive'
+
+    @OhRequest.requires_auth_token
+    @OhRequest.requires_account
+    def __init__(self):
+        super(KeepAliveRequest, self).__init__()
 
 class ViewQuoteListRequest(OhRequest):
-    def __init__(self, authToken, keys, **flags):
-        self.endpoint = 'https://api.optionshouse.com/j'
-        self.action = 'view.quote.list'
-        self.data = {
-            'authToken': authToken,
-        }
+    ENDPOINT = 'https://api.optionshouse.com/j'
+    ACTION = 'view.quote.list'
+
+    @OhRequest.requires_auth_token
+    def __init__(self, keys, **flags):
+        super(ViewQuoteListRequest, self).__init__()
 
         if len(keys) == 0:
             "Can't proceed without any keys"
@@ -100,14 +127,14 @@ class ViewQuoteListRequest(OhRequest):
 
 
 class ViewSeriesRequest(OhRequest):
-    def __init__(self, authToken, symbol, **flags):
+    ENDPOINT = 'https://api.optionshouse.com/m'
+    ACTION = 'view.series'
+
+    @OhRequest.requires_auth_token
+    def __init__(self, symbol, **flags):
+        super(ViewSeriesRequest, self).__init__()
         self.index = None
-        self.endpoint = 'https://api.optionshouse.com/m'
-        self.action = 'view.series'
-        self.data = {
-            'authToken': authToken,
-            'symbol': symbol,
-        }
+        self.data['symbol'] = symbol
 
         if 'quarterlies' in flags and flags['quarterlies']:
             self.data['quarterlies'] = True
@@ -115,55 +142,55 @@ class ViewSeriesRequest(OhRequest):
             self.data['weeklies'] = True
 
 class AccountMarginJsonRequest(OhRequest):
-    def __init__(self, authToken, account, order):
-        self.endpoint = 'https://api.optionshouse.com/j'
-        self.action = 'account.margin.json'
-        self.data = {
-            'authToken': authToken,
-            'account': account,
-            'order': order.toDict(),
-        }
+    ENDPOINT = 'https://api.optionshouse.com/j'
+    ACTION = 'account.margin.json'
+
+    @OhRequest.requires_auth_token
+    @OhRequest.requires_account
+    def __init__(self, order):
+        super(AccountMarginJsonRequest, self).__init__()
+        self.data['order'] = order.toDict()
 
 class OrderCreateJsonRequest(OhRequest):
-    def __init__(self, authToken, account, order):
-        self.endpoint = 'https://api.optionshouse.com/j'
-        self.action = 'order.create.json'
-        self.data = {
-            'authToken': authToken,
-            'account': account,
-            'order': order.toDict(),
-        }
+    ENDPOINT = 'https://api.optionshouse.com/j'
+    ACTION = 'order.create.json'
+
+    @OhRequest.requires_auth_token
+    @OhRequest.requires_account
+    def __init__(self, order):
+        super(OrderCreateJsonRequest, self).__init__()
+        self.data['order'] = order.toDict()
 
 class OrderModifyJsonRequest(OhRequest):
-    def __init__(self, authToken, account, order):
-        self.endpoint = 'https://api.optionshouse.com/j'
-        self.action = 'order.modify.json'
-        self.data = {
-            'authToken': authToken,
-            'account': account,
-            'order': order.toDict(),
-        }
+    ENDPOINT = 'https://api.optionshouse.com/j'
+    ACTION = 'order.modify.json'
+
+    @OhRequest.requires_auth_token
+    @OhRequest.requires_account
+    def __init__(self, order):
+        super(OrderModifyJsonRequest, self).__init__()
+        self.data['order'] = order.toDict()
 
 class OrderCancelJsonRequest(OhRequest):
-    def __init__(self, authToken, account, order_id):
-        self.endpoint = 'https://api.optionshouse.com/j'
-        self.action = 'order.cancel.json'
-        self.data = {
-            'authToken': authToken,
-            'account': account,
-            'order_id': order_id,
-        }
+    ENDPOINT = 'https://api.optionshouse.com/j'
+    ACTION = 'order.cancel.json'
+
+    @OhRequest.requires_auth_token
+    @OhRequest.requires_account
+    def __init__(self, order_id):
+        super(OrderCancelJsonRequest, self).__init__()
+        self.data['order_id'] = order_id
 
 class MasterAccountOrdersRequest(OhRequest):
-    def __init__(self, authToken, account, **flags):
-        self.endpoint = 'https://api.optionshouse.com/j'
-        self.action = 'master.account.orders'
-        self.data = {
-            'authToken': authToken,
-            'account': account,
-            'master_order': {
-                'master_order_view': 'current',
-            }
+    ENDPOINT = 'https://api.optionshouse.com/j'
+    ACTION = 'master.account.orders'
+
+    @OhRequest.requires_auth_token
+    @OhRequest.requires_account
+    def __init__(self, **flags):
+        super(MasterAccountOrdersRequest, self).__init__()
+        self.data['master_order'] = {
+            'master_order_view': 'current',
         }
 
         if 'symbol' in flags:
@@ -178,23 +205,22 @@ class MasterAccountOrdersRequest(OhRequest):
             self.data['master_order']['page_size'] = flags['page_size']
 
 class AccountPositionsRequest(OhRequest):
-    def __init__(self, authToken, account):
-        self.endpoint = 'https://api.optionshouse.com/m'
-        self.action = 'account.positions'
-        self.data = {
-            'authToken': authToken,
-            'account': account,
-        }
+    ENDPOINT = 'https://api.optionshouse.com/m'
+    ACTION = 'account.positions'
+
+    @OhRequest.requires_auth_token
+    @OhRequest.requires_account
+    def __init__(self):
+        super(AccountPositionsRequest, self).__init__()
 
 class AccountActivityRequest(OhRequest):
-    def __init__(self, authToken, account, **kwargs):
-        self.endpoint = 'https://api.optionshouse.com/m'
-        self.action = 'account.activity'
-        self.data = {
-            'authToken': authToken,
-            'account': account,
-        }
-        print kwargs
+    ENDPOINT = 'https://api.optionshouse.com/m'
+    ACTION = 'account.activity'
+
+    @OhRequest.requires_auth_token
+    @OhRequest.requires_account
+    def __init__(self, **kwargs):
+        super(AccountActivityRequest, self).__init__()
 
         if 'page' in kwargs:
             self.data['page'] = kwargs['page']
