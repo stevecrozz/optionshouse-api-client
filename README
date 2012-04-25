@@ -1,3 +1,31 @@
 optionshouse-api-client is a simple python wrapper around the optionshouse
 trading platform API. The goal of this project is to provide a working, but
 minimal, non-magic interface to the API.
+
+==Example Session
+from session import Session
+s = Session('myusername', 'mypassword')
+s.open()
+s.quote('GS')
+s.close()
+
+==Supported API Methods
+This API client supports all the documented optionshouse API actions. Each one
+is available as a method on instances of Session:
+* account_activity
+* account_cash
+* account_info
+* account_positions
+* cancel_order
+* close
+* issue_request
+* keepalive
+* list_orders
+* modify_order
+* open
+* options_list
+* parse_response
+* place_order
+* preview_order
+* quote
+
