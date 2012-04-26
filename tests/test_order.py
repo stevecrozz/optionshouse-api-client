@@ -60,7 +60,6 @@ class TestOrder(unittest.TestCase):
             time_in_force='good_till_cancel',
             price='72.50',
             underlying_stock_symbol='COP',
-            client_id='someuniqueidentifier',
             legs=legs,
             allOrNone=False,
             order_subtype='single',
@@ -73,11 +72,11 @@ class TestOrder(unittest.TestCase):
             'price': '72.50',
             'underlying_stock_symbol': 'COP',
             'source': 'API',
-            'client_id': 'someuniqueidentifier',
+            'client_id': order.data['client_id'],
             'preferred_destination': 'BEST',
             'legs': legs,
             'allOrNone': False,
-            'order_subtype': 'single',
+            'order_subtype': 'spread',
             'order_type': 'regular'
         }
         self.assertEqual(order.data, expected_data)
