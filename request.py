@@ -2,6 +2,11 @@ import urllib2
 import json
 
 class OhRequest(object):
+    """
+    Abstract request class. All other request classes are subclasses of this
+    one.
+    """
+
     HEADERS = { 'User-Agent' : 'OhPythonClient' }
 
     def __init__(self):
@@ -10,6 +15,12 @@ class OhRequest(object):
         self.data = {}
 
     def body(self):
+        """
+        Get the text of the request body that should be sent to optionshouse.
+        Here we have hardcoded r= which tells optionshouse we will be passing a
+        JSON request and we expect a JSON response.
+        """
+
         return 'r=' + json.dumps({
             'EZMessage': {
                 'action': self.action,
@@ -18,6 +29,10 @@ class OhRequest(object):
         })
 
     def request(self):
+        """
+        Get a urllib2.Request object representation of this request
+        """
+
         return urllib2.Request(
             self.endpoint,
             self.body(),
@@ -26,6 +41,10 @@ class OhRequest(object):
 
     @classmethod
     def requires_auth_token(self, fn):
+        """
+        Decorator adds authToken as an argument
+        """
+
         def wrapper(self, *args, **kwargs):
             args = list(args)
             authToken = args.pop(0)
@@ -37,6 +56,10 @@ class OhRequest(object):
 
     @classmethod
     def requires_account(self, fn):
+        """
+        Decorator adds account as an argument
+        """
+
         def wrapper(self, *args, **kwargs):
             args = list(args)
             authToken = args.pop(0)
@@ -47,6 +70,7 @@ class OhRequest(object):
         return wrapper
 
 class LoginRequest(OhRequest):
+
     ENDPOINT = 'https://api.optionshouse.com/m'
     ACTION = 'auth.login'
 
