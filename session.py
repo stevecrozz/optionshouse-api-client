@@ -117,14 +117,14 @@ class Session(object):
         return self.issue_request(
             OrderCreateJsonRequest(self.authToken, account, order))
 
-    def modify_order(self, account, order):
+    def modify_order(self, account, order, old_order_id):
         """
-        Given a special "modified" Order object, ask optionshouse to swap the
-        existing order for the given one
+        For the given account, ask optionshouse to replace an existing order
+        with a new one. The exisitng order must be specified using the
+        old_order_id argument.
         """
 
-        if order.data['modify_order'] == True:
-            "raise exception"
+        order.modify(old_order_id)
 
         return self.issue_request(
             OrderModifyJsonRequest(self.authToken, account, order))
