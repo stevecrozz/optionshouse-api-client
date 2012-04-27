@@ -37,8 +37,6 @@ class Order(object):
             self.data['order_subtype'] = 'regular'
         elif len(kwargs['legs']) > 1:
             self.data['order_subtype'] = 'spread'
-        else:
-            "zero legs, bad!, raise exception"
 
 
     def modify(self, order_id):

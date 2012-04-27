@@ -2,7 +2,61 @@ import urllib2
 import json
 from request import *
 
+class OhRequestException(Exception):
+    """
+    This exception should be raised when the HTTP response from optionshouse
+    includes errors
+    """
+
+    def __init__(self, errors):
+        self.errors = errors
+
+    def __str__(self):
+        return repr(self.errors)
+
+class OhUnknownException(Exception):
+    """
+    This exception should be raised when some improper condition has been
+    reached and no further information is available
+    """
+
+    pass
+
+class OhConnectionException(Exception):
+    """
+    This exception should be raised when the server returns an error-level HTTP
+    response code or the server could not be reached at all
+    """
+
+    def __str__(self, error):
+        self.error = error
+
+    def __str__(self):
+        return repr(self.error)
+
+
 class Session(object):
+    """
+    A Session object is the simplest way to make use of this library. When you
+    open a Session object using your login credentials, the Sessoin object
+    stores a copy of the authToken returned by optionshouse and uses the
+    authToken for all subsequent requests.
+
+    You may keep your Session from expiring by calling #keepalive every so
+    often. There are helper methods on Session objects for every documented
+    optionshouse API call. Each successful helper method will return the data
+    portion of the JSON response from optionshouse.
+
+    Methods that take an 'account' parameter need to be given an account_id
+    (which is different from an account number). You can get your account_id by
+    checking the response from #account_info.
+
+    Exampe:
+    s = Session('myusername', 'mypassword')
+    s.open()
+    s.quote("GS")
+    s.close()
+    """
 
     def __init__(self, username, password):
         """
@@ -32,7 +86,7 @@ class Session(object):
             self.authToken = oh_res['authToken']
             self.state = 'open'
         else:
-            print oh_res
+            raise OhUnkownException()
 
     def close(self):
         """
@@ -47,7 +101,7 @@ class Session(object):
             self.authToken = None
             self.state = 'closed'
         else:
-            print oh_res
+            raise OhUnkownException()
 
     def keepalive(self, account):
         """
@@ -181,11 +235,10 @@ class Session(object):
         try:
             oh_res = urllib2.urlopen(ohreq.request())
         except urllib2.HTTPError, e:
-            print 'The server couldn\'t fulfill the request.'
-            print 'Error code: ', e.code
+            raise OhConnectionException('HTTP code: ', e.code)
         except urllib2.URLError, e:
-            print 'We failed to reach a server.'
-            print 'Reason: ', e.reason
+            raise OhConnectionException(
+                'Server could not be reached: ', e.reason)
         else:
             return self.parse_response(oh_res)
 
@@ -193,7 +246,7 @@ class Session(object):
         response = json.loads(ohres.read())['EZMessage']
 
         if 'errors' in response:
-            print response['errors']
-        else:
+            raise OhRequestException(response['errors'])
+        elif 'data' in response:
             return response['data']
 
