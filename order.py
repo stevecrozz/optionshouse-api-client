@@ -5,6 +5,21 @@ class Order(object):
     The Order object is used to preivew, create and modify orders.
     """
 
+    # These are all the possible statuses an Order can have
+    STATUSES = [
+        "Pending",
+        "Open",
+        "Expired",
+        "Exercised",
+        "Canceled",
+        "Cancel_Pending",
+        "Partial_Cancel_Pending",
+        "Filled",
+        "Rejected",
+        "Partial_Cancel",
+        "Partially_Filled",
+    ]
+
     def __init__(self, **kwargs):
         """
         The following keyword arguments are required:
@@ -37,7 +52,6 @@ class Order(object):
             self.data['order_subtype'] = 'regular'
         elif len(kwargs['legs']) > 1:
             self.data['order_subtype'] = 'spread'
-
 
     def modify(self, order_id):
         """
