@@ -294,9 +294,11 @@ class TestMasterAccountOrdersRequest(unittest.TestCase):
         for flags in possible_flags:
             req = MasterAccountOrdersRequest(authToken, account, **flags)
 
+            # Note the 'account_id' parameter which is different from all the
+            # other requests which require an 'account' parameter
             expected = {
                 'authToken': authToken,
-                'account': account,
+                'account_id': account,
                 'master_order': {
                     'master_order_view': 'current',
                 },

@@ -62,9 +62,17 @@ class OhRequest(object):
 
         def wrapper(self, *args, **kwargs):
             args = list(args)
-            authToken = args.pop(0)
+            account = args.pop(0)
             fn(self, *args, **kwargs)
-            self.data['account'] = authToken
+
+            if self.__class__.__name__ == "MasterAccountOrdersRequest":
+                # OptionsHouse calls this an account_id for this one request
+                # and just account for all the others. Why would you do that,
+                # OptionsHouse?
+                self.data['account_id'] = account
+            else:
+                self.data['account'] = account
+
             self.requires_account = True
 
         return wrapper

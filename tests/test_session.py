@@ -1,11 +1,12 @@
 import mock, unittest, inspect, request, urllib2
 
-# Mock all the request objects. We only need to make sure they're being
-# instantiated correctly. Request testing is done separately.
-request_objs = [ i[0] for i in inspect.getmembers(request, inspect.isclass)]
-for item in request_objs:
-    fake_req = mock.patch("request.%s" % item, mocksignature=True)
-    fake_req.start()
+for i in inspect.getmembers(request, inspect.isclass):
+    """
+    Mock all the request objects. We only need to make sure they're being
+    instantiated correctly. Request testing is done separately.
+    """
+
+    mock.patch("request.%s" % i[0]).start()
 
 import session
 
@@ -179,6 +180,39 @@ class TestSession(unittest.TestCase):
 
         issue_req_mock.stop()
 
+    def test_rate_limit(self):
+        """
+        Make sure we're helpfully rate-limiting requests to optionshouse. We
+        should be good and try to avoid clients accidently DoSing optionshouse.
+        """
+
+        issue_req_mock = mock.patch('session.Session.issue_request')
+        issue_req_mock.start()
+        mock_wait = mock.patch('session.Session.wait')
+        mock_wait.start()
+
+        mock_time = mock.patch("time.time", return_value=1.0)
+        mock_time.start()
+        s = self.get_open_session()
+        s.account_activity(self.ACCOUNT)
+        mock_time.stop()
+
+        mock_time = mock.patch("time.time", return_value=1.5)
+        mock_time.start()
+        s.keepalive(self.ACCOUNT)
+        mock_time.stop()
+        s.wait.assert_called_once_with(0.5)
+
+        mock_time = mock.patch("time.time", return_value=4.5)
+        mock_time.start()
+
+        # This will raise an exception if the session tries to call #wait
+        s.wait = "can't call a string"
+        s.keepalive(self.ACCOUNT)
+        mock_time.stop()
+
+        issue_req_mock.stop()
+        mock_wait.stop()
 
 
 

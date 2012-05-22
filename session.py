@@ -1,5 +1,4 @@
-import urllib2
-import json
+import urllib2, json, time
 from request import *
 
 class OhRequestException(Exception):
@@ -58,6 +57,8 @@ class Session(object):
     s.close()
     """
 
+    TIME_BETWEEN_REQUESTS = 1
+
     def __init__(self, username, password):
         """
         Create a Session object. Username and password are both required
@@ -67,6 +68,18 @@ class Session(object):
         self.password = password
         self.state = 'closed'
         self.authToken = None
+        self.last_request_time = None
+
+    def wait(self, seconds_to_wait):
+        """
+        __Wait is called internally when the session has been asked to make a
+        request within a short time of another request. This is a protection
+        mechanism to avoid violating the terms of the optionshouse API
+        agreement. The documentation says no more than 1 request per second is
+        allowed.
+        """
+
+        time.sleep(seconds_to_wait)
 
     def open(self):
         """
@@ -75,7 +88,7 @@ class Session(object):
         use.
         """
 
-        oh_res = self.issue_request(
+        oh_res = self.request(
             LoginRequest(self.username, self.password))
 
         if oh_res == None:
@@ -94,7 +107,7 @@ class Session(object):
         will be invalidated and cleared from the session.
         """
 
-        oh_res = self.issue_request(
+        oh_res = self.request(
             LogoutRequest(self.authToken))
 
         if 'logout' in oh_res:
@@ -109,7 +122,7 @@ class Session(object):
         periodically will keep this from happening.
         """
 
-        return self.issue_request(
+        return self.request(
             KeepAliveRequest(self.authToken, account))
 
     def account_info(self):
@@ -117,7 +130,7 @@ class Session(object):
         Get information about accounts associated with login provided
         """
 
-        return self.issue_request(
+        return self.request(
             AccountInfoRequest(self.authToken))
 
     def account_cash(self, account, **kwargs):
@@ -125,7 +138,7 @@ class Session(object):
         Get all the available financial information about the provided account
         """
 
-        return self.issue_request(
+        return self.request(
             AccountCashRequest(self.authToken, account, **kwargs))
 
     def quote(self, keys, **kwargs):
@@ -139,7 +152,7 @@ class Session(object):
         addFundamentalDetails: include fundamental details
         """
 
-        return self.issue_request(
+        return self.request(
             ViewQuoteListRequest(self.authToken, keys, **kwargs))
 
     def options_list(self, symbol, **kwargs):
@@ -151,7 +164,7 @@ class Session(object):
         weeklies: include weekly options
         """
 
-        return self.issue_request(
+        return self.request(
             ViewSeriesRequest(self.authToken, symbol, **kwargs))
 
     def preview_order(self, account, order):
@@ -160,7 +173,7 @@ class Session(object):
         and the effect it will have on your account
         """
 
-        return self.issue_request(
+        return self.request(
             AccountMarginJsonRequest(self.authToken, account, order))
 
     def place_order(self, account, order):
@@ -168,7 +181,7 @@ class Session(object):
         Given an account and an Order object, actually place the order
         """
 
-        return self.issue_request(
+        return self.request(
             OrderCreateJsonRequest(self.authToken, account, order))
 
     def modify_order(self, account, order, old_order_id):
@@ -180,7 +193,7 @@ class Session(object):
 
         order.modify(old_order_id)
 
-        return self.issue_request(
+        return self.request(
             OrderModifyJsonRequest(self.authToken, account, order))
 
     def cancel_order(self, account, order_id):
@@ -188,7 +201,7 @@ class Session(object):
         Given an account and an order_id, ask optionshouse to cancel the order
         """
 
-        return self.issue_request(
+        return self.request(
             OrderCancelJsonRequest(self.authToken, account, order_id))
 
     def list_orders(self, account, **kwargs):
@@ -203,7 +216,7 @@ class Session(object):
         'page_size' keyword arguments.
         """
 
-        return self.issue_request(
+        return self.request(
             MasterAccountOrdersRequest(self.authToken, account, **kwargs))
 
     def account_positions(self, account):
@@ -212,8 +225,23 @@ class Session(object):
         price and cost basis information
         """
 
-        return self.issue_request(
-            AccountPositionsRequest(self.authToken, account))
+        try:
+            response = self.request(
+                AccountPositionsRequest(self.authToken, account))
+        except OhRequestException as e:
+            if "positions" in e.errors:
+                if e.errors["positions"] == "none found":
+                    # This is a stupid error because no positions is a
+                    # perfectly normal condition, we'll just return an empty
+                    # array like optionshouse should
+
+                    return {"unified": []}
+
+            else:
+                # Something else went wrong, so re-raise
+                raise e
+
+        return response
 
     def account_activity(self, account, **kwargs):
         """
@@ -228,8 +256,27 @@ class Session(object):
         page, maxPage, size and totalCount
         """
 
-        return self.issue_request(
+        return self.request(
             AccountActivityRequest(self.authToken, account, **kwargs))
+
+    def request(self, ohreq):
+        """
+        Actually take a naked request object and send it to optionshouse.
+        Instead of calling this directly, you should call one of the session
+        helper methods.
+        """
+
+        now = time.time()
+
+        if self.last_request_time != None:
+            delta = now - self.last_request_time
+
+            if delta < self.TIME_BETWEEN_REQUESTS:
+                self.wait(self.TIME_BETWEEN_REQUESTS - delta)
+
+        self.last_request_time = now
+
+        return self.issue_request(ohreq)
 
     def issue_request(self, ohreq):
         try:
