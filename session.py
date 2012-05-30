@@ -267,14 +267,16 @@ class Session(object):
         """
 
         now = time.time()
+        sleep_time = 0
 
         if self.last_request_time != None:
             delta = now - self.last_request_time
 
             if delta < self.TIME_BETWEEN_REQUESTS:
-                self.wait(self.TIME_BETWEEN_REQUESTS - delta)
+                sleep_time = self.TIME_BETWEEN_REQUESTS - delta
+                self.wait(sleep_time)
 
-        self.last_request_time = now
+        self.last_request_time = now + sleep_time
 
         return self.issue_request(ohreq)
 

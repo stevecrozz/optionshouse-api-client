@@ -196,12 +196,14 @@ class TestSession(unittest.TestCase):
         s = self.get_open_session()
         s.account_activity(self.ACCOUNT)
         mock_time.stop()
+        self.assertEqual(s.last_request_time, 1.0)
 
         mock_time = mock.patch("time.time", return_value=1.5)
         mock_time.start()
         s.keepalive(self.ACCOUNT)
         mock_time.stop()
         s.wait.assert_called_once_with(0.5)
+        self.assertEqual(s.last_request_time, 2.0)
 
         mock_time = mock.patch("time.time", return_value=4.5)
         mock_time.start()
