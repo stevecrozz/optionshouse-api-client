@@ -47,8 +47,10 @@ s.preview_order(12345, order)
 ```
 
 ## Looks good? Go ahead and place it
+```python
 s.place_order(12345, order)
 s.close()
+```
 
 ## Responses
 All of the API requests have structured responses which vary. Take a look in
