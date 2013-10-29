@@ -5,10 +5,11 @@ minimal, non-magic interface to the API.
 [http://lithostech.com/2012/09/automated-trading-via-optionshouse-api/](http://lithostech.com/2012/09/automated-trading-via-optionshouse-api/ "lithostech.com")
 
 Disclaimer:
-This API client has some test coverage, but has not gone through any real-world
-use yet. I would strongly discourage anyone from using this to place real
-orders at this time. If you use this software, you must assume all
-responsibility for your actions and the actions of this software package.
+This API client has some test coverage, and it has seen some real-world
+use. That said, you should do your own research and testing before
+running any of this on your own. If you use this software, you must
+assume all responsibility for your actions and the actions of this
+software package.
 
 ## Basic Example Session
 ```python
@@ -75,3 +76,7 @@ This API client supports all the documented optionshouse API actions. Each one i
 * place_order
 * preview_order
 * quote
+
+## Custom OptionsHouse API Solutions
+If you're looking for an [Optionshouse API developer](http://www.brandedcrate.com/optionshouse-api-developer/),
+or support for your API project, you can find me over at [Branded Crate](http://www.brandedcrate.com).
