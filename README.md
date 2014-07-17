@@ -1,4 +1,8 @@
-# optionshouse-api-client
+# optionshouse-api-client [![TravisCI][travis-img-url]][travis-ci-url]
+
+[travis-img-url]: https://travis-ci.org/stevecrozz/optionshouse-api-client.svg?branch=master
+[travis-ci-url]: http://travis-ci.org/stevecrozz/optionshouse-api-client
+
 optionshouse-api-client is a simple python wrapper around the optionshouse
 trading platform API. The goal of this project is to provide a working, but
 minimal, non-magic interface to the API.
