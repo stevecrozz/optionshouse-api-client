@@ -1,14 +1,8 @@
-import mock, unittest, inspect, request, urllib2
+import sys
+if 'optionshouse' not in sys.path:
+    sys.path.append('optionshouse')
 
-for i in inspect.getmembers(request, inspect.isclass):
-    """
-    Mock all the request objects. We only need to make sure they're being
-    instantiated correctly. Request testing is done separately.
-    """
-
-    mock.patch("request.%s" % i[0]).start()
-
-import session
+import mock, unittest, inspect, request
 
 class TestSession(unittest.TestCase):
 
@@ -20,17 +14,38 @@ class TestSession(unittest.TestCase):
     }
     ORDER = '<<<ORDER>>>'
 
+    @classmethod
+    def setUpClass(cls):
+        cls.request_mocks = []
+
+        for i in inspect.getmembers(request, inspect.isclass):
+            """
+            Mock all the request objects. We only need to make sure they're
+            being instantiated correctly. Request testing is done separately.
+            """
+
+            request_mock = mock.patch("request.%s" % i[0])
+            request_mock.start()
+            cls.request_mocks.append(request_mock)
+
+    @classmethod
+    def tearDownClass(cls):
+        mock.patch.stopall()
+
     def get_open_session(self):
+        import session
         s = session.Session('mike', 'mikepassword')
         s.authToken = self.AUTH_TOKEN
         return s
 
     def test_bare_session(self):
+        import session
         s = session.Session('joe', 'joespassword')
         self.assertEqual(s.state, 'closed')
         self.assertEqual(s.authToken, None)
 
     def test_session_open(self):
+        import session
         issue_req_mock = mock.patch('session.Session.issue_request',
             return_value={ 'authToken': 'someauthtoken!!' })
         issue_req_mock.start()
@@ -84,6 +99,13 @@ class TestSession(unittest.TestCase):
             self.ACCOUNT, **self.KWARGS)
 
         issue_req_mock.stop()
+
+    def test_market_status(self):
+        issue_req_mock = mock.patch('session.Session.issue_request')
+        issue_req_mock.start()
+
+        self.get_open_session().market_status()
+        request.MarketStatusRequest.assert_called_with(self.AUTH_TOKEN)
 
     def test_quote(self):
         issue_req_mock = mock.patch('session.Session.issue_request')

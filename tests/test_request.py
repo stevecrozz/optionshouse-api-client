@@ -1,5 +1,14 @@
+import sys
+if 'optionshouse' not in sys.path:
+    sys.path.append('optionshouse')
+
 from request import *
 import unittest
+
+if sys.version_info[0] < 3:
+    from urlparse import parse_qs
+else:
+    from urllib.parse import parse_qs
 
 class TestLoginRequest(unittest.TestCase):
 
@@ -14,12 +23,14 @@ class TestLoginRequest(unittest.TestCase):
             'password': '123',
         }
         self.assertEqual(req.data, expected_data)
-        self.assertEqual(req.body(), 'r=' + json.dumps({
+
+        parsed_body = json.loads(parse_qs(req.body())['r'][0])
+        self.assertEqual(parsed_body, {
             'EZMessage': {
                 'action': 'auth.login',
                 'data': expected_data,
             }
-        }))
+        })
 
 class TestLogoutRequest(unittest.TestCase):
 
@@ -33,12 +44,13 @@ class TestLogoutRequest(unittest.TestCase):
             'authToken': '989_some_session_token_878',
         }
         self.assertEqual(req.data, expected_data)
-        self.assertEqual(req.body(), 'r=' + json.dumps({
+        parsed_body = json.loads(parse_qs(req.body())['r'][0])
+        self.assertEqual(parsed_body, {
             'EZMessage': {
                 'action': 'auth.logout',
                 'data': expected_data,
             }
-        }))
+        })
 
 class TestAccountInfoRequest(unittest.TestCase):
 
@@ -52,13 +64,13 @@ class TestAccountInfoRequest(unittest.TestCase):
             'authToken': '989_some_session_token_878',
         }
         self.assertEqual(req.data, expected_data)
-        self.assertEqual(req.body(), 'r=' + json.dumps({
+        parsed_body = json.loads(parse_qs(req.body())['r'][0])
+        self.assertEqual(parsed_body, {
             'EZMessage': {
                 'action': 'account.info',
                 'data': expected_data,
             }
-        }))
-
+        })
 
 class TestAccountCashRequest(unittest.TestCase):
 
@@ -93,13 +105,13 @@ class TestAccountCashRequest(unittest.TestCase):
             self.assertEqual(req.endpoint, 'https://api.optionshouse.com/m')
             self.assertEqual(req.action, 'account.cash')
             self.assertEqual(req.data, expected_data)
-            self.assertEqual(req.body(), 'r=' + json.dumps({
+            parsed_body = json.loads(parse_qs(req.body())['r'][0])
+            self.assertEqual(parsed_body, {
                 'EZMessage': {
                     'action': 'account.cash',
                     'data': expected_data,
                 }
-            }))
-
+            })
 
 class TestKeepAliveRequest(unittest.TestCase):
 
@@ -116,13 +128,13 @@ class TestKeepAliveRequest(unittest.TestCase):
         self.assertEqual(req.endpoint, 'https://api.optionshouse.com/m')
         self.assertEqual(req.action, 'auth.keepAlive')
         self.assertEqual(req.data, expected_data)
-        self.assertEqual(req.body(), 'r=' + json.dumps({
+        parsed_body = json.loads(parse_qs(req.body())['r'][0])
+        self.assertEqual(parsed_body, {
             'EZMessage': {
                 'action': 'auth.keepAlive',
                 'data': expected_data,
             }
-        }))
-
+        })
 
 class TestViewQuoteListRequest(unittest.TestCase):
 
@@ -157,13 +169,34 @@ class TestViewQuoteListRequest(unittest.TestCase):
             self.assertEqual(req.endpoint, 'https://api.optionshouse.com/j')
             self.assertEqual(req.action, 'view.quote.list')
             self.assertEqual(req.data, expected_data)
-            self.assertEqual(req.body(), 'r=' + json.dumps({
+            parsed_body = json.loads(parse_qs(req.body())['r'][0])
+            self.assertEqual(parsed_body, {
                 'EZMessage': {
                     'action': 'view.quote.list',
                     'data': expected_data,
                 }
-            }))
+            })
 
+class TestMarketStatusRequest(unittest.TestCase):
+
+    def test_market_status_request(self):
+        authToken = '83982734324_someauthtoken'
+        req = MarketStatusRequest(authToken)
+        expected_data = {
+            'authToken': authToken,
+            'key': ['MARKETSTATUS'],
+        }
+
+        self.assertEqual(req.endpoint, 'https://api.optionshouse.com/m')
+        self.assertEqual(req.action, 'view.quote.list')
+        self.assertEqual(req.data, expected_data)
+        parsed_body = json.loads(parse_qs(req.body())['r'][0])
+        self.assertEqual(parsed_body, {
+            'EZMessage': {
+                'action': 'view.quote.list',
+                'data': expected_data,
+            }
+        })
 
 class TestViewSeriesRequest(unittest.TestCase):
 
@@ -193,13 +226,13 @@ class TestViewSeriesRequest(unittest.TestCase):
             self.assertEqual(req.endpoint, 'https://api.optionshouse.com/m')
             self.assertEqual(req.action, 'view.series')
             self.assertEqual(req.data, expected_data)
-            self.assertEqual(req.body(), 'r=' + json.dumps({
+            parsed_body = json.loads(parse_qs(req.body())['r'][0])
+            self.assertEqual(parsed_body, {
                 'EZMessage': {
                     'action': 'view.series',
                     'data': expected_data,
                 }
-            }))
-
+            })
 
 class TestAccountMarginJsonRequest(unittest.TestCase):
     def test_proper_amj_request(self):
@@ -220,6 +253,13 @@ class TestAccountMarginJsonRequest(unittest.TestCase):
         self.assertEqual(req.endpoint, 'https://api.optionshouse.com/j')
         self.assertEqual(req.action, 'account.margin.json')
         self.assertEqual(req.data, expected_data)
+        parsed_body = json.loads(parse_qs(req.body())['r'][0])
+        self.assertEqual(parsed_body, {
+            'EZMessage': {
+                'action': 'account.margin.json',
+                'data': expected_data,
+            }
+        })
 
 class TestOrderCreateJsonRequest(unittest.TestCase):
     def test_proper_order_create_request(self):
@@ -240,6 +280,13 @@ class TestOrderCreateJsonRequest(unittest.TestCase):
         self.assertEqual(req.endpoint, 'https://api.optionshouse.com/j')
         self.assertEqual(req.action, 'order.create.json')
         self.assertEqual(req.data, expected_data)
+        parsed_body = json.loads(parse_qs(req.body())['r'][0])
+        self.assertEqual(parsed_body, {
+            'EZMessage': {
+                'action': 'order.create.json',
+                'data': expected_data,
+            }
+        })
 
 class TestOrderModifyJsonRequest(unittest.TestCase):
     def test_proper_order_modify_request(self):
@@ -260,6 +307,13 @@ class TestOrderModifyJsonRequest(unittest.TestCase):
         self.assertEqual(req.endpoint, 'https://api.optionshouse.com/j')
         self.assertEqual(req.action, 'order.modify.json')
         self.assertEqual(req.data, expected_data)
+        parsed_body = json.loads(parse_qs(req.body())['r'][0])
+        self.assertEqual(parsed_body, {
+            'EZMessage': {
+                'action': 'order.modify.json',
+                'data': expected_data,
+            }
+        })
 
 class TestOrderCancelJsonRequest(unittest.TestCase):
     def test_proper_order_cancel_request(self):
@@ -275,6 +329,13 @@ class TestOrderCancelJsonRequest(unittest.TestCase):
         self.assertEqual(req.endpoint, 'https://api.optionshouse.com/j')
         self.assertEqual(req.action, 'order.cancel.json')
         self.assertEqual(req.data, expected_data)
+        parsed_body = json.loads(parse_qs(req.body())['r'][0])
+        self.assertEqual(parsed_body, {
+            'EZMessage': {
+                'action': 'order.cancel.json',
+                'data': expected_data,
+            }
+        })
 
 class TestMasterAccountOrdersRequest(unittest.TestCase):
     def test_proper_request(self):
@@ -318,6 +379,13 @@ class TestMasterAccountOrdersRequest(unittest.TestCase):
             self.assertEqual(req.endpoint, 'https://api.optionshouse.com/j')
             self.assertEqual(req.action, 'master.account.orders')
             self.assertEqual(req.data, expected)
+            parsed_body = json.loads(parse_qs(req.body())['r'][0])
+            self.assertEqual(parsed_body, {
+                'EZMessage': {
+                    'action': 'master.account.orders',
+                    'data': expected,
+                }
+            })
 
 class TestAccountPositionsRequest(unittest.TestCase):
     def test_account_positions_request(self):
@@ -332,6 +400,13 @@ class TestAccountPositionsRequest(unittest.TestCase):
         self.assertEqual(req.endpoint, 'https://api.optionshouse.com/m')
         self.assertEqual(req.action, 'account.positions')
         self.assertEqual(req.data, expected_data)
+        parsed_body = json.loads(parse_qs(req.body())['r'][0])
+        self.assertEqual(parsed_body, {
+            'EZMessage': {
+                'action': 'account.positions',
+                'data': expected_data,
+            }
+        })
 
 class TestAccountActivityRequest(unittest.TestCase):
     def test_account_activity_request(self):
@@ -374,7 +449,13 @@ class TestAccountActivityRequest(unittest.TestCase):
             self.assertEqual(req.endpoint, 'https://api.optionshouse.com/m')
             self.assertEqual(req.action, 'account.activity')
             self.assertEqual(req.data, expected_data)
-
+            parsed_body = json.loads(parse_qs(req.body())['r'][0])
+            self.assertEqual(parsed_body, {
+                'EZMessage': {
+                    'action': 'account.activity',
+                    'data': expected_data,
+                }
+            })
 
 if __name__ == '__main__':
     unittest.main()

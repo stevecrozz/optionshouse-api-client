@@ -1,5 +1,9 @@
-import urllib2
-import json
+import sys, json
+
+if sys.version_info[0] < 3:
+    from urllib2 import Request
+else:
+    from urllib.request import Request
 
 class OhRequest(object):
     """
@@ -30,10 +34,10 @@ class OhRequest(object):
 
     def request(self):
         """
-        Get a urllib2.Request object representation of this request
+        Get a Request object representation of this request
         """
 
-        return urllib2.Request(
+        return Request(
             self.endpoint,
             self.body(),
             OhRequest.HEADERS
@@ -157,6 +161,15 @@ class ViewQuoteListRequest(OhRequest):
         if 'fundamental_details' in flags and flags['fundamental_details']:
             self.data['addFundamentalDetails'] = self.data['key']
 
+class MarketStatusRequest(OhRequest):
+    ENDPOINT = 'https://api.optionshouse.com/m'
+    ACTION = 'view.quote.list'
+
+    @OhRequest.requires_auth_token
+    def __init__(self, **flags):
+        super(MarketStatusRequest, self).__init__()
+
+        self.data['key'] = ['MARKETSTATUS']
 
 class ViewSeriesRequest(OhRequest):
     ENDPOINT = 'https://api.optionshouse.com/m'

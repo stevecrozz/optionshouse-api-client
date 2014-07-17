@@ -1,3 +1,7 @@
+import sys
+if 'optionshouse' not in sys.path:
+    sys.path.append('optionshouse')
+
 from order import Order, OrderLeg
 import unittest
 

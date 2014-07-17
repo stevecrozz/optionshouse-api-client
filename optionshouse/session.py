@@ -1,4 +1,11 @@
-import urllib2, json, time
+import json, time, sys
+
+if sys.version_info[0] < 3:
+    from urllib2 import urlopen, HTTPError, URLError
+else:
+    from urllib.request import urlopen
+    from urllib.error import HTTPError, URLError
+
 from request import *
 
 class OhRequestException(Exception):
@@ -155,6 +162,13 @@ class Session(object):
         return self.request(
             ViewQuoteListRequest(self.authToken, keys, **kwargs))
 
+    def market_status(self):
+        """
+        Return whether or not the market is closed
+        """
+        return self.request(
+            MarketStatusRequest(self.authToken))
+
     def options_list(self, symbol, **kwargs):
         """
         Given the provided underlying symbol, get a list of available options.
@@ -282,10 +296,10 @@ class Session(object):
 
     def issue_request(self, ohreq):
         try:
-            oh_res = urllib2.urlopen(ohreq.request())
-        except urllib2.HTTPError, e:
+            oh_res = urlopen(ohreq.request())
+        except HTTPError as e:
             raise OhConnectionException('HTTP code: ', e.code)
-        except urllib2.URLError, e:
+        except URLError as e:
             raise OhConnectionException(
                 'Server could not be reached: ', e.reason)
         else:
