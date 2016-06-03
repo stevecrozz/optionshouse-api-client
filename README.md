@@ -1,3 +1,7 @@
+# End-of-life notice
+
+Sadly, the OptionsHouse API was discontinued after OptionsHouse merged with tradeMONSTER. That means this API client will no longer work. It's now only here for reference and as an example of my work. At the time of this writing, I don't have any plans to build a new API client for the tradeMONSTER API. If you're here looking for an API client you can actually use, then what you probably need is a tradeMONSTER API client.
+
 # optionshouse-api-client [![TravisCI][travis-img-url]][travis-ci-url]
 
 [travis-img-url]: https://travis-ci.org/stevecrozz/optionshouse-api-client.svg?branch=master
